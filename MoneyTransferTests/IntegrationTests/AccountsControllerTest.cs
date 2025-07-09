@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoneyTransfer.Dto;
 using MoneyTransfer.Models;
@@ -19,6 +20,30 @@ public class AccountsControllerTests(WebApplicationFactory<Program> factory)
         var accounts = await response.Content.ReadFromJsonAsync<List<Account>>();
         Assert.NotNull(accounts);
         Assert.True(accounts.Count >= 0);
+    }
+    
+    [Fact]
+    public async Task GetAccountById_ReturnsCorrectAccount()
+    {
+        // Arrange: create a new account
+        var newAccount = TestAccountObject();
+        var createResponse = await _client.PostAsJsonAsync("/api/accounts", newAccount);
+        createResponse.EnsureSuccessStatusCode();
+        var createdAccount = await createResponse.Content.ReadFromJsonAsync<Account>();
+    
+        // Act: get the account by ID
+        var getResponse = await _client.GetAsync($"/api/accounts/{createdAccount.Id}");
+        getResponse.EnsureSuccessStatusCode();
+        var fetchedAccount = await getResponse.Content.ReadFromJsonAsync<Account>();
+    
+        // Assert: verify the fetched account matches the created one
+        Assert.NotNull(fetchedAccount);
+        Assert.Equal(createdAccount.Id, fetchedAccount.Id);
+        Assert.Equal(newAccount.FullName, fetchedAccount.FullName);
+        Assert.Equal(newAccount.AccountBalance, fetchedAccount.AccountBalance);
+        Assert.Equal(newAccount.AccountType, fetchedAccount.AccountType);
+        Assert.Equal(newAccount.EmailAddress, fetchedAccount.EmailAddress);
+        Assert.Equal(newAccount.PhoneNumber, fetchedAccount.PhoneNumber);
     }
     
     [Fact]
@@ -55,6 +80,28 @@ public class AccountsControllerTests(WebApplicationFactory<Program> factory)
         var updateResponse = await _client.PutAsJsonAsync($"/api/accounts/{createdAccount.Id}", createdAccount);
         updateResponse.EnsureSuccessStatusCode();
     }
+    
+    [Theory]
+    [MemberData(nameof(InvalidAccountData))]
+    public async Task CreateAccount_InvalidData_ReturnsBadRequest(object invalidAccount, string expectedField)
+    {
+        var response = await _client.PostAsJsonAsync("/api/accounts", invalidAccount);
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        
+        var problemDetails = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        Assert.NotNull(problemDetails);
+        Assert.True(problemDetails.Errors.ContainsKey(expectedField));
+    }
+    
+    public static IEnumerable<object[]> InvalidAccountData =>
+        new List<object[]>
+        {
+            new object[] { new { AccountBalance = 0m, FullName = "Test", AccountType = AccountType.Student, EmailAddress = "test@test.com", PhoneNumber = "1234567890" }, "AccountBalance" },
+            new object[] { new { AccountBalance = 100m, FullName = "", AccountType = AccountType.Student, EmailAddress = "test@test.com", PhoneNumber = "1234567890" }, "FullName" },
+            new object[] { new { AccountBalance = 100m, FullName = "Test", AccountType = 99, EmailAddress = "test@test.com", PhoneNumber = "1234567890" }, "AccountType" },
+            new object[] { new { AccountBalance = 100m, FullName = "Test", AccountType = AccountType.Student, EmailAddress = "invalid-email", PhoneNumber = "1234567890" }, "EmailAddress" },
+            new object[] { new { AccountBalance = 100m, FullName = "Test", AccountType = AccountType.Student, EmailAddress = "test@test.com", PhoneNumber = "invalid-phone" }, "PhoneNumber" }
+        };
     
     [Fact]
     public async Task PartialUpdateAccount_UpdatesSpecifiedFields()
