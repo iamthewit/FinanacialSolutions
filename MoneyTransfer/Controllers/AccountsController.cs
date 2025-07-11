@@ -6,36 +6,34 @@ namespace MoneyTransfer.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AccountsController : ControllerBase
+public class AccountsController(IAccountRepository repository) : ControllerBase
 {
     [HttpGet]
     public ActionResult<IEnumerable<Account>> GetAll()
     {
-        return Ok(StaticAccountList.Accounts);
+        return Ok(repository.GetAll());
     }
 
     [HttpGet("{id:int}")]
     public ActionResult<Account> GetById(int id)
     {
-        var account = StaticAccountList.Accounts.FirstOrDefault(a => a.Id == id);
+        var account = repository.GetById(id);
         if (account == null) return NotFound();
-        
         return Ok(account);
     }
 
     [HttpPost]
     public ActionResult<Account> Create(Account account)
     {
-        account.Id = StaticAccountList.Accounts.Count > 0 ? StaticAccountList.Accounts.Max(a => a.Id) + 1 : 1;
-        StaticAccountList.Accounts.Add(account);
-        
+        repository.Add(account);
+        repository.SaveChanges();
         return CreatedAtAction(nameof(GetById), new { id = account.Id }, account);
     }
 
     [HttpPut("{id:int}")]
     public IActionResult Update(int id, Account updatedAccount)
     {
-        var account = StaticAccountList.Accounts.FirstOrDefault(a => a.Id == id);
+        var account = repository.GetById(id);
         if (account == null) return NotFound();
 
         account.AccountBalance = updatedAccount.AccountBalance;
@@ -44,13 +42,15 @@ public class AccountsController : ControllerBase
         account.EmailAddress = updatedAccount.EmailAddress;
         account.PhoneNumber = updatedAccount.PhoneNumber;
 
+        repository.Update(account);
+        repository.SaveChanges();
         return NoContent();
     }
     
     [HttpPatch("{id:int}")]
     public IActionResult UpdatePartial(int id, [FromBody] AccountPatchDto accountPatchDto)
     {
-        var account = StaticAccountList.Accounts.FirstOrDefault(a => a.Id == id);
+        var account = repository.GetById(id);
         if (account == null) return NotFound();
 
         if (accountPatchDto.AccountBalance.HasValue)
@@ -68,16 +68,18 @@ public class AccountsController : ControllerBase
         if (!string.IsNullOrEmpty(accountPatchDto.PhoneNumber))
             account.PhoneNumber = accountPatchDto.PhoneNumber;
 
+        repository.Update(account);
+        repository.SaveChanges();
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public IActionResult Delete(int id)
     {
-        var account = StaticAccountList.Accounts.FirstOrDefault(a => a.Id == id);
+        var account = repository.GetById(id);
         if (account == null) return NotFound();
-        StaticAccountList.Accounts.Remove(account);
-        
+        repository.Delete(account);
+        repository.SaveChanges();
         return NoContent();
     }
 }
