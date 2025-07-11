@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 using MoneyTransfer.Models;
 
 namespace MoneyTransfer.Dto;
