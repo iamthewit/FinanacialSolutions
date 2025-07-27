@@ -11,6 +11,11 @@ public class AccountsControllerTests(WebApplicationFactory<Program> factory)
 {
     private readonly HttpClient _client = factory.CreateClient();
 
+    // TODO: Setup
+    // - truncate database
+    // - seed with test data if needed
+    // - migrations?
+    
     [Fact]
     public async Task GetAll_ReturnsOkAndAccounts()
     {

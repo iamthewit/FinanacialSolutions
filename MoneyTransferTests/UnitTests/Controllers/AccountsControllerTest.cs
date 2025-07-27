@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MoneyTransfer.Controllers;
 using MoneyTransfer.Models;
+using MoneyTransfer.Repositories;
 using Moq;
 
 namespace MoneyTransferTests.UnitTests.Controllers;

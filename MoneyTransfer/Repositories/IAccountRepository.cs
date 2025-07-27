@@ -1,7 +1,6 @@
-using System.Collections.Generic;
 using MoneyTransfer.Models;
 
-namespace MoneyTransfer.Controllers
+namespace MoneyTransfer.Repositories
 {
     public interface IAccountRepository
     {

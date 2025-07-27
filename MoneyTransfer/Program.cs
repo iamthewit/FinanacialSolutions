@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MoneyTransfer;
+using MoneyTransfer.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +13,7 @@ builder.Services.AddOpenApi();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<FinancialSolutionsDbContext>(options => options.UseMySQL(connectionString));
 
-builder.Services.AddScoped<MoneyTransfer.Controllers.IAccountRepository, MoneyTransfer.Controllers.AccountRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 
 var app = builder.Build();
 

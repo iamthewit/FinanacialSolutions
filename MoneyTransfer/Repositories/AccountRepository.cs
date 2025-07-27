@@ -1,6 +1,6 @@
 using MoneyTransfer.Models;
 
-namespace MoneyTransfer.Controllers
+namespace MoneyTransfer.Repositories
 {
     public class AccountRepository(FinancialSolutionsDbContext db) : IAccountRepository
     {
