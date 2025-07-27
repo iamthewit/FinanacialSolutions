@@ -15,8 +15,8 @@ public class AccountsController(IAccountRepository repository) : ControllerBase
         return Ok(repository.GetAll());
     }
 
-    [HttpGet("{id:int}")]
-    public ActionResult<Account> GetById(int id)
+    [HttpGet("{id:guid}")]
+    public ActionResult<Account> GetById(Guid id)
     {
         var account = repository.GetById(id);
         if (account == null) return NotFound();
@@ -26,13 +26,14 @@ public class AccountsController(IAccountRepository repository) : ControllerBase
     [HttpPost]
     public ActionResult<Account> Create(Account account)
     {
+        account.Id = Guid.NewGuid();
         repository.Add(account);
         repository.SaveChanges();
         return CreatedAtAction(nameof(GetById), new { id = account.Id }, account);
     }
 
-    [HttpPut("{id:int}")]
-    public IActionResult Update(int id, Account updatedAccount)
+    [HttpPut("{id:guid}")]
+    public IActionResult Update(Guid id, Account updatedAccount)
     {
         var account = repository.GetById(id);
         if (account == null) return NotFound();
@@ -48,8 +49,8 @@ public class AccountsController(IAccountRepository repository) : ControllerBase
         return NoContent();
     }
     
-    [HttpPatch("{id:int}")]
-    public IActionResult UpdatePartial(int id, [FromBody] AccountPatchDto accountPatchDto)
+    [HttpPatch("{id:guid}")]
+    public IActionResult UpdatePartial(Guid id, [FromBody] AccountPatchDto accountPatchDto)
     {
         var account = repository.GetById(id);
         if (account == null) return NotFound();
@@ -74,8 +75,8 @@ public class AccountsController(IAccountRepository repository) : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
-    public IActionResult Delete(int id)
+    [HttpDelete("{id:guid}")]
+    public IActionResult Delete(Guid id)
     {
         var account = repository.GetById(id);
         if (account == null) return NotFound();

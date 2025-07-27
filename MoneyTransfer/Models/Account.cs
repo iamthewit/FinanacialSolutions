@@ -4,7 +4,7 @@ namespace MoneyTransfer.Models;
 
 public class Account
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     
     [Required]
     [Range(0.01, double.MaxValue, ErrorMessage = "Account balance must be greater than zero.")]

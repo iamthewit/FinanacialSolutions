@@ -24,8 +24,8 @@ public class UsersController(FinancialSolutionsDbContext context) : ControllerBa
         }));
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<UserDto>> GetById(int id)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<UserDto>> GetById(Guid id)
     {
         var user = await context.Users.FindAsync(id);
         if (user == null) return NotFound();
@@ -42,6 +42,7 @@ public class UsersController(FinancialSolutionsDbContext context) : ControllerBa
     [HttpPost]
     public async Task<ActionResult<UserDto>> Create(User user)
     {
+        user.Id = Guid.NewGuid();
         user.Password = HashPassword(user.Password);
         context.Users.Add(user);
         await context.SaveChangesAsync();
@@ -56,8 +57,8 @@ public class UsersController(FinancialSolutionsDbContext context) : ControllerBa
         return CreatedAtAction(nameof(GetById), new { id = user.Id }, dto);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, User updatedUser)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, User updatedUser)
     {
         var user = await context.Users.FindAsync(id);
         if (user == null) return NotFound();
@@ -70,8 +71,8 @@ public class UsersController(FinancialSolutionsDbContext context) : ControllerBa
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
     {
         var user = await context.Users.FindAsync(id);
         if (user == null) return NotFound();

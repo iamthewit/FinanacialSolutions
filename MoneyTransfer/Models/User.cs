@@ -4,7 +4,7 @@ namespace MoneyTransfer.Models;
 
 public class User
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     [Required]
     [MinLength(1)]
@@ -26,4 +26,3 @@ public class User
     [Phone]
     public required string PhoneNumber { get; set; }
 }
-

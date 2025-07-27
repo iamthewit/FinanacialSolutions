@@ -60,7 +60,7 @@ public class UsersControllerTest : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(user.LastName, created.LastName);
         Assert.Equal(user.EmailAddress, created.EmailAddress);
         Assert.Equal(user.PhoneNumber, created.PhoneNumber);
-        Assert.True(created.Id > 0);
+        Assert.True(created.Id != Guid.Empty);
     }
 
     [Fact]

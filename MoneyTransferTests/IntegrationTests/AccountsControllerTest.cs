@@ -91,7 +91,7 @@ public class AccountsControllerTests : IClassFixture<WebApplicationFactory<Progr
         Assert.Equal(newAccount.AccountType, createdAccount.AccountType);
         Assert.Equal(newAccount.EmailAddress, createdAccount.EmailAddress);
         Assert.Equal(newAccount.PhoneNumber, createdAccount.PhoneNumber);
-        Assert.NotEqual(0, createdAccount.Id); // Ensure ID is set
+        Assert.NotEqual(Guid.Empty, createdAccount.Id); // Ensure ID is set
         Assert.Equal(201, (int)response.StatusCode); // Ensure status code is 201 Created
     }
 

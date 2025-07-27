@@ -6,7 +6,7 @@ namespace MoneyTransfer.Repositories
     {
         public IEnumerable<Account> GetAll() => db.Accounts.ToList();
 
-        public Account? GetById(int id) => db.Accounts.Find(id);
+        public Account? GetById(Guid id) => db.Accounts.Find(id);
 
         public void Add(Account account)
         {
@@ -29,4 +29,3 @@ namespace MoneyTransfer.Repositories
         }
     }
 }
-

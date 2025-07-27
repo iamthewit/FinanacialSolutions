@@ -13,7 +13,7 @@ public class AccountsControllerTest
     {
         var account = new Account()
         {
-            Id = 1,
+            Id = Guid.NewGuid(),
             AccountBalance = 1000.00m,
             FullName = "",
             AccountType = AccountType.Student,
