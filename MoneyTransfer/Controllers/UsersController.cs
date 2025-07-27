@@ -1,19 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using MoneyTransfer.Models;
 using MoneyTransfer.Dto;
 using System.Security.Cryptography;
+using MoneyTransfer.Repositories;
 
 namespace MoneyTransfer.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(FinancialSolutionsDbContext context) : ControllerBase
+public class UsersController(IUserRepository repository) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<UserDto>>> GetAll()
+    public ActionResult<IEnumerable<UserDto>> GetAll()
     {
-        var users = await context.Users.ToListAsync();
+        var users = repository.GetAll();
         return Ok(users.Select(u => new UserDto
         {
             Id = u.Id,
@@ -25,9 +25,9 @@ public class UsersController(FinancialSolutionsDbContext context) : ControllerBa
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<UserDto>> GetById(Guid id)
+    public ActionResult<UserDto> GetById(Guid id)
     {
-        var user = await context.Users.FindAsync(id);
+        var user = repository.GetById(id);
         if (user == null) return NotFound();
         return Ok(new UserDto
         {
@@ -40,12 +40,12 @@ public class UsersController(FinancialSolutionsDbContext context) : ControllerBa
     }
 
     [HttpPost]
-    public async Task<ActionResult<UserDto>> Create(User user)
+    public ActionResult<UserDto> Create(User user)
     {
         user.Id = Guid.NewGuid();
         user.Password = HashPassword(user.Password);
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
+        repository.Add(user);
+        repository.SaveChanges();
         var dto = new UserDto
         {
             Id = user.Id,
@@ -58,26 +58,27 @@ public class UsersController(FinancialSolutionsDbContext context) : ControllerBa
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, User updatedUser)
+    public IActionResult Update(Guid id, User updatedUser)
     {
-        var user = await context.Users.FindAsync(id);
+        var user = repository.GetById(id);
         if (user == null) return NotFound();
         user.FirstName = updatedUser.FirstName;
         user.LastName = updatedUser.LastName;
         user.EmailAddress = updatedUser.EmailAddress;
         user.Password = HashPassword(updatedUser.Password);
         user.PhoneNumber = updatedUser.PhoneNumber;
-        await context.SaveChangesAsync();
+        repository.Update(user);
+        repository.SaveChanges();
         return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public IActionResult Delete(Guid id)
     {
-        var user = await context.Users.FindAsync(id);
+        var user = repository.GetById(id);
         if (user == null) return NotFound();
-        context.Users.Remove(user);
-        await context.SaveChangesAsync();
+        repository.Delete(user);
+        repository.SaveChanges();
         return NoContent();
     }
 
