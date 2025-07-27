@@ -1,30 +1,55 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using MoneyTransfer.Dto;
 using MoneyTransfer.Models;
 
 namespace MoneyTransferTests.IntegrationTests;
 
-public class AccountsControllerTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class AccountsControllerTests : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
 {
-    private readonly HttpClient _client = factory.CreateClient();
+    private readonly HttpClient _client;
+    private readonly WebApplicationFactory<Program> _factory;
 
-    // TODO: Setup
-    // - truncate database
-    // - seed with test data if needed
-    // - migrations?
+    public AccountsControllerTests(WebApplicationFactory<Program> factory)
+    {
+        _factory = factory;
+        _client = factory.CreateClient();
+    }
+
+    public async Task TruncateAccountsTableAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MoneyTransfer.FinancialSolutionsDbContext>();
+        await db.Database.ExecuteSqlRawAsync("DELETE FROM Accounts");
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE Accounts AUTO_INCREMENT = 1");
+    }
+
+    public async Task InitializeAsync()
+    {
+        await TruncateAccountsTableAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
     
     [Fact]
     public async Task GetAll_ReturnsOkAndAccounts()
     {
+        // Arrange: create a new account to ensure the list is not empty
+        var newAccount = TestAccountObject();
+        var createResponse = await _client.PostAsJsonAsync("/api/accounts", newAccount);
+        createResponse.EnsureSuccessStatusCode();
+
+        // Act
         var response = await _client.GetAsync("/api/accounts");
         response.EnsureSuccessStatusCode();
 
         var accounts = await response.Content.ReadFromJsonAsync<List<Account>>();
         Assert.NotNull(accounts);
-        Assert.True(accounts.Count >= 0);
+        Assert.True(accounts.Count > 0);
+        Assert.Contains(accounts, a => a.EmailAddress == newAccount.EmailAddress);
     }
     
     [Fact]
