@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MoneyTransfer;
 
@@ -10,9 +11,11 @@ using MoneyTransfer;
 namespace MoneyTransfer.Migrations
 {
     [DbContext(typeof(FinancialSolutionsDbContext))]
-    partial class FinancialSolutionsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250727162821_AccountUserRelation")]
+    partial class AccountUserRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

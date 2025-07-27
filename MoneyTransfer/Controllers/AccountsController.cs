@@ -39,10 +39,8 @@ public class AccountsController(IAccountRepository repository) : ControllerBase
         if (account == null) return NotFound();
 
         account.AccountBalance = updatedAccount.AccountBalance;
-        account.FullName = updatedAccount.FullName;
         account.AccountType = updatedAccount.AccountType;
-        account.EmailAddress = updatedAccount.EmailAddress;
-        account.PhoneNumber = updatedAccount.PhoneNumber;
+        account.UserId = updatedAccount.UserId;
 
         repository.Update(account);
         repository.SaveChanges();
@@ -57,19 +55,10 @@ public class AccountsController(IAccountRepository repository) : ControllerBase
 
         if (accountPatchDto.AccountBalance.HasValue)
             account.AccountBalance = accountPatchDto.AccountBalance.Value;
-        
-        if (!string.IsNullOrEmpty(accountPatchDto.FullName))
-            account.FullName = accountPatchDto.FullName;
-        
         if (accountPatchDto.AccountType.HasValue)
             account.AccountType = accountPatchDto.AccountType.Value;
-        
-        if (!string.IsNullOrEmpty(accountPatchDto.EmailAddress))
-            account.EmailAddress = accountPatchDto.EmailAddress;
-        
-        if (!string.IsNullOrEmpty(accountPatchDto.PhoneNumber))
-            account.PhoneNumber = accountPatchDto.PhoneNumber;
-
+        if (accountPatchDto.UserId.HasValue)
+            account.UserId = accountPatchDto.UserId.Value;
         repository.Update(account);
         repository.SaveChanges();
         return NoContent();

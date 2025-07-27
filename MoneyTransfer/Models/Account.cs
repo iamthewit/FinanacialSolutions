@@ -11,19 +11,10 @@ public class Account
     public decimal AccountBalance { get; set; }
     
     [Required]
-    [MinLength(1, ErrorMessage = "Full name cannot be empty.")]
-    public required string FullName { get; set; }
-    
-    [Required]
     [EnumDataType(typeof(AccountType), ErrorMessage = "Invalid account type.")]
     public AccountType AccountType { get; set; }
     
-    [Required]
-    [MinLength(1, ErrorMessage = "EmailAddress name cannot be empty.")]
-    [EmailAddress]
-    public required string EmailAddress { get; set; }
-    
-    [Required]
-    [Phone]
-    public required string PhoneNumber { get; set; }
+    // User reference (optional, if you want to link Account to User)
+    public Guid UserId { get; set; }
+    public User? User { get; set; }
 }

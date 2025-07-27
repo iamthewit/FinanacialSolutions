@@ -34,79 +34,92 @@ public class AccountsControllerTests : IClassFixture<WebApplicationFactory<Progr
 
     public Task DisposeAsync() => Task.CompletedTask;
     
+    private async Task<Guid> CreateTestUserAndGetIdAsync()
+    {
+        var user = new User
+        {
+            FirstName = "Test",
+            LastName = "User",
+            EmailAddress = $"test{Guid.NewGuid()}@example.com",
+            Password = "TestPassword!",
+            PhoneNumber = "+10000000000"
+        };
+        var response = await _client.PostAsJsonAsync("/api/users", user);
+        response.EnsureSuccessStatusCode();
+        var created = await response.Content.ReadFromJsonAsync<UserDto>();
+        return created!.Id;
+    }
+
+    private static Account TestAccountObject(Guid userId)
+    {
+        return new Account
+        {
+            AccountBalance = 500.00m,
+            AccountType = AccountType.Student,
+            UserId = userId
+        };
+    }
+
     [Fact]
     public async Task GetAll_ReturnsOkAndAccounts()
     {
-        // Arrange: create a new account to ensure the list is not empty
-        var newAccount = TestAccountObject();
+        var userId = await CreateTestUserAndGetIdAsync();
+        var newAccount = TestAccountObject(userId);
         var createResponse = await _client.PostAsJsonAsync("/api/accounts", newAccount);
         createResponse.EnsureSuccessStatusCode();
-
-        // Act
         var response = await _client.GetAsync("/api/accounts");
         response.EnsureSuccessStatusCode();
-
         var accounts = await response.Content.ReadFromJsonAsync<List<Account>>();
         Assert.NotNull(accounts);
         Assert.True(accounts.Count > 0);
-        Assert.Contains(accounts, a => a.EmailAddress == newAccount.EmailAddress);
+        Assert.Contains(accounts, a => a.UserId == userId);
     }
     
     [Fact]
     public async Task GetAccountById_ReturnsCorrectAccount()
     {
-        // Arrange: create a new account
-        var newAccount = TestAccountObject();
+        var userId = await CreateTestUserAndGetIdAsync();
+        var newAccount = TestAccountObject(userId);
         var createResponse = await _client.PostAsJsonAsync("/api/accounts", newAccount);
         createResponse.EnsureSuccessStatusCode();
         var createdAccount = await createResponse.Content.ReadFromJsonAsync<Account>();
-    
-        // Act: get the account by ID
         var getResponse = await _client.GetAsync($"/api/accounts/{createdAccount.Id}");
         getResponse.EnsureSuccessStatusCode();
         var fetchedAccount = await getResponse.Content.ReadFromJsonAsync<Account>();
-    
-        // Assert: verify the fetched account matches the created one
         Assert.NotNull(fetchedAccount);
         Assert.Equal(createdAccount.Id, fetchedAccount.Id);
-        Assert.Equal(newAccount.FullName, fetchedAccount.FullName);
         Assert.Equal(newAccount.AccountBalance, fetchedAccount.AccountBalance);
         Assert.Equal(newAccount.AccountType, fetchedAccount.AccountType);
-        Assert.Equal(newAccount.EmailAddress, fetchedAccount.EmailAddress);
-        Assert.Equal(newAccount.PhoneNumber, fetchedAccount.PhoneNumber);
+        Assert.Equal(newAccount.UserId, fetchedAccount.UserId);
     }
     
     [Fact]
     public async Task CreateAccount_ReturnsCreatedAtAction()
     {
-        var newAccount = TestAccountObject();
+        var userId = await CreateTestUserAndGetIdAsync();
+        var newAccount = TestAccountObject(userId);
         var response = await _client.PostAsJsonAsync("/api/accounts", newAccount);
         response.EnsureSuccessStatusCode();
-        
         var createdAccount = await response.Content.ReadFromJsonAsync<Account>();
-        
         Assert.NotNull(createdAccount);
         Assert.Equal(newAccount.AccountBalance, createdAccount.AccountBalance);
-        Assert.Equal(newAccount.FullName, createdAccount.FullName);
         Assert.Equal(newAccount.AccountType, createdAccount.AccountType);
-        Assert.Equal(newAccount.EmailAddress, createdAccount.EmailAddress);
-        Assert.Equal(newAccount.PhoneNumber, createdAccount.PhoneNumber);
-        Assert.NotEqual(Guid.Empty, createdAccount.Id); // Ensure ID is set
-        Assert.Equal(201, (int)response.StatusCode); // Ensure status code is 201 Created
+        Assert.Equal(newAccount.UserId, createdAccount.UserId);
+        Assert.NotEqual(Guid.Empty, createdAccount.Id);
+        Assert.Equal(201, (int)response.StatusCode);
     }
 
     [Fact]
     public async Task UpdateAccount_ReturnsOkAndUpdatedAccount()
     {
-        // Arrange: create a new account
-        var newAccount = TestAccountObject();
+        var userId = await CreateTestUserAndGetIdAsync();
+        var newAccount = TestAccountObject(userId);
         var createResponse = await _client.PostAsJsonAsync("/api/accounts", newAccount);
         createResponse.EnsureSuccessStatusCode();
         var createdAccount = await createResponse.Content.ReadFromJsonAsync<Account>();
-    
-        // Act: update the account
-        createdAccount.FullName = "Updated Name";
         createdAccount.AccountBalance = 200.00m;
+        createdAccount.AccountType = AccountType.Student;
+        createdAccount.UserId = userId;
         var updateResponse = await _client.PutAsJsonAsync($"/api/accounts/{createdAccount.Id}", createdAccount);
         updateResponse.EnsureSuccessStatusCode();
     }
@@ -126,47 +139,38 @@ public class AccountsControllerTests : IClassFixture<WebApplicationFactory<Progr
     public static IEnumerable<object[]> InvalidAccountData =>
         new List<object[]>
         {
-            new object[] { new { AccountBalance = 0m, FullName = "Test", AccountType = AccountType.Student, EmailAddress = "test@test.com", PhoneNumber = "1234567890" }, "AccountBalance" },
-            new object[] { new { AccountBalance = 100m, FullName = "", AccountType = AccountType.Student, EmailAddress = "test@test.com", PhoneNumber = "1234567890" }, "FullName" },
-            new object[] { new { AccountBalance = 100m, FullName = "Test", AccountType = 99, EmailAddress = "test@test.com", PhoneNumber = "1234567890" }, "AccountType" },
-            new object[] { new { AccountBalance = 100m, FullName = "Test", AccountType = AccountType.Student, EmailAddress = "invalid-email", PhoneNumber = "1234567890" }, "EmailAddress" },
-            new object[] { new { AccountBalance = 100m, FullName = "Test", AccountType = AccountType.Student, EmailAddress = "test@test.com", PhoneNumber = "invalid-phone" }, "PhoneNumber" }
+            new object[] { new { AccountBalance = 0m, AccountType = AccountType.Student, UserId = Guid.NewGuid() }, "AccountBalance" },
+            new object[] { new { AccountBalance = 100m, AccountType = 99, UserId = Guid.NewGuid() }, "AccountType" }
         };
     
     [Fact]
     public async Task PartialUpdateAccount_UpdatesSpecifiedFields()
     {
-        // Arrange: create a new account
-        var newAccount = TestAccountObject();
+        var userId = await CreateTestUserAndGetIdAsync();
+        var newAccount = TestAccountObject(userId);
         var createResponse = await _client.PostAsJsonAsync("/api/accounts", newAccount);
         createResponse.EnsureSuccessStatusCode();
         var createdAccount = await createResponse.Content.ReadFromJsonAsync<Account>();
-    
-        // Act: patch the account using AccountPatchDto
         var patchDto = new AccountPatchDto()
         {
-            FullName = "Patched Name",
             AccountBalance = 150.00m
         };
         var patchResponse = await _client.PatchAsJsonAsync($"/api/accounts/{createdAccount.Id}", patchDto);
         patchResponse.EnsureSuccessStatusCode();
-    
-        // Assert: verify the fields were updated
         var getResponse = await _client.GetAsync($"/api/accounts/{createdAccount.Id}");
         getResponse.EnsureSuccessStatusCode();
         var updatedAccount = await getResponse.Content.ReadFromJsonAsync<Account>();
-        Assert.Equal("Patched Name", updatedAccount.FullName);
         Assert.Equal(150.00m, updatedAccount.AccountBalance);
-        Assert.Equal(newAccount.AccountType, updatedAccount.AccountType); // unchanged
-        Assert.Equal(newAccount.EmailAddress, updatedAccount.EmailAddress); // unchanged
-        Assert.Equal(newAccount.PhoneNumber, updatedAccount.PhoneNumber); // unchanged
+        Assert.Equal(newAccount.AccountType, updatedAccount.AccountType);
+        Assert.Equal(newAccount.UserId, updatedAccount.UserId);
     }
     
     [Fact]
     public async Task DeleteAccount_RemovesAccount()
     {
         // Arrange: create a new account
-        var newAccount = TestAccountObject();
+        var userId = await CreateTestUserAndGetIdAsync();
+        var newAccount = TestAccountObject(userId);
         var createResponse = await _client.PostAsJsonAsync("/api/accounts", newAccount);
         createResponse.EnsureSuccessStatusCode();
         var createdAccount = await createResponse.Content.ReadFromJsonAsync<Account>();
@@ -178,18 +182,5 @@ public class AccountsControllerTests : IClassFixture<WebApplicationFactory<Progr
         // Assert: ensure account is deleted
         var getResponse = await _client.GetAsync($"/api/accounts/{createdAccount.Id}");
         Assert.Equal(System.Net.HttpStatusCode.NotFound, getResponse.StatusCode);
-    }
-    
-    private static Account TestAccountObject()
-    {
-        var newAccount = new Account
-        {
-            AccountBalance = 500.00m,
-            FullName = "Test User",
-            AccountType = AccountType.Student,
-            EmailAddress = "email@address.com",
-            PhoneNumber = "01234567890",
-        };
-        return newAccount;
     }
 }

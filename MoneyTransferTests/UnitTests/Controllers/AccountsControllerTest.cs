@@ -15,10 +15,8 @@ public class AccountsControllerTest
         {
             Id = Guid.NewGuid(),
             AccountBalance = 1000.00m,
-            FullName = "",
             AccountType = AccountType.Student,
-            EmailAddress = "",
-            PhoneNumber = "01234567890"
+            UserId = Guid.NewGuid()
         };
 
         var mockRepo = new Mock<IAccountRepository>();
