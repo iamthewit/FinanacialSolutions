@@ -13,6 +13,20 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+
+  moneytransfer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moneytransfer-app
+    depends_on:
+      - mysql
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mysql-db;Port=3306;Database=financialsolutions;User=fsuser;Password=fspassword;
+    ports:
+      - "5000:8080"
+    restart: always
+
 volumes:
   mysql-data:
-
