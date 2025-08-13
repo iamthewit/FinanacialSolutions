@@ -13,3 +13,4 @@ WORKDIR /app
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "MoneyTransfer.dll"]
 
+

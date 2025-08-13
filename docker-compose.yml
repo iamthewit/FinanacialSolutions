@@ -14,16 +14,30 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
 
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    depends_on:
+      - mysql
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mysql-db;Port=3306;Database=financialsolutions;User=fsuser;Password=fspassword;
+
   moneytransfer:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: moneytransfer-app
     depends_on:
-      - mysql
+      migrate:
+        condition: service_completed_successfully
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=mysql-db;Port=3306;Database=financialsolutions;User=fsuser;Password=fspassword;
+      - MYSQL_HOST=mysql-db
+      - MYSQL_USER=fsuser
+      - MYSQL_PASSWORD=fspassword
     ports:
       - "5000:8080"
     restart: always

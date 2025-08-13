@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0
+WORKDIR /src
+COPY . .
+
+# Restore dotnet tools (dotnet-ef)
+RUN dotnet tool restore
+
+# Restore project dependencies
+RUN dotnet restore MoneyTransfer/MoneyTransfer.csproj
+
+WORKDIR /src/MoneyTransfer
+
+COPY entrypoint-migrate.sh /entrypoint-migrate.sh
+RUN chmod +x /entrypoint-migrate.sh
+
+ENTRYPOINT ["/entrypoint-migrate.sh"]
+
