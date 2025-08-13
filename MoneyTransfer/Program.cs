@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MoneyTransfer;
 using MoneyTransfer.Repositories;
+using MoneyTransfer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddDbContext<FinancialSolutionsDbContext>(options => options.Us
 
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
